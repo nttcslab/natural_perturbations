@@ -1,0 +1,47 @@
+defaults:
+  - _self_  
+  - override hydra/hydra_logging: disabled  
+  - override hydra/job_logging: disabled
+
+hydra:
+  run:
+    dir: ./
+  output_subdir: null
+
+seed: 0
+device: cuda  # cpu
+cuda_id: 0
+logdir: '../log'
+suffix: '_'
+
+dataset: MNIST  # [MNIST, FMNIST, equalization, copying, CIFAR10]
+save_file: null
+load_file: null
+
+optimizer: Adam
+lr: 0.001
+epochs_bp: 5
+epochs: 10
+batch_size: 100
+num_vectors: 20  # number of perturbation vectors (ZO), population size (CMA-ES)
+cma_sigma: 0.005  # initial standard deviation for CMA-ES
+
+zoo:
+  budget: 1e+16  # query budget
+  mu: 1e-3  # smoothing hyperparameter
+  vectors: np  # [fromI, coordinate, np]
+  max_dim: 512
+  scale_back: false
+  np:  # Natural Perturbation
+    lambdaP: 1
+    lambdaF: 100
+    Tud: 100  # Update interval of covariances
+
+num_features: 16
+cnn:
+  ch: 8
+  linear_width: 16  
+mlp:
+  n_mixer: 3
+  n_channel: 32
+  kernel_size: 4

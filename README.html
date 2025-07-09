@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Natural Perturbations for Black-box Training of Neural Networks by Zeroth-Order Optimization</title>
+            <style>
+/* From extension vscode.github */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.vscode-dark img[src$=\#gh-light-mode-only],
+.vscode-light img[src$=\#gh-dark-mode-only],
+.vscode-high-contrast:not(.vscode-high-contrast-light) img[src$=\#gh-light-mode-only],
+.vscode-high-contrast-light img[src$=\#gh-dark-mode-only] {
+	display: none;
+}
+
+</style>
+            
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item {
+    list-style-type: none;
+}
+
+.task-list-item-checkbox {
+    margin-left: -20px;
+    vertical-align: middle;
+    pointer-events: none;
+}
+</style>
+<style>
+:root {
+  --color-note: #0969da;
+  --color-tip: #1a7f37;
+  --color-warning: #9a6700;
+  --color-severe: #bc4c00;
+  --color-caution: #d1242f;
+  --color-important: #8250df;
+}
+
+</style>
+<style>
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-note: #2f81f7;
+    --color-tip: #3fb950;
+    --color-warning: #d29922;
+    --color-severe: #db6d28;
+    --color-caution: #f85149;
+    --color-important: #a371f7;
+  }
+}
+
+</style>
+<style>
+.markdown-alert {
+  padding: 0.5rem 1rem;
+  margin-bottom: 16px;
+  color: inherit;
+  border-left: .25em solid #888;
+}
+
+.markdown-alert>:first-child {
+  margin-top: 0
+}
+
+.markdown-alert>:last-child {
+  margin-bottom: 0
+}
+
+.markdown-alert .markdown-alert-title {
+  display: flex;
+  font-weight: 500;
+  align-items: center;
+  line-height: 1
+}
+
+.markdown-alert .markdown-alert-title .octicon {
+  margin-right: 0.5rem;
+  display: inline-block;
+  overflow: visible !important;
+  vertical-align: text-bottom;
+  fill: currentColor;
+}
+
+.markdown-alert.markdown-alert-note {
+  border-left-color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-note .markdown-alert-title {
+  color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-important {
+  border-left-color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-important .markdown-alert-title {
+  color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-warning {
+  border-left-color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-warning .markdown-alert-title {
+  color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-tip {
+  border-left-color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-tip .markdown-alert-title {
+  color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-caution {
+  border-left-color: var(--color-caution);
+}
+
+.markdown-alert.markdown-alert-caution .markdown-alert-title {
+  color: var(--color-caution);
+}
+
+</style>
+        
+        </head>
+        <body class="vscode-body vscode-light">
+            <h1 id="natural-perturbations-for-black-box-training-of-neural-networks-by-zeroth-order-optimization">Natural Perturbations for Black-box Training of Neural Networks by Zeroth-Order Optimization</h1>
+<p>All source code necessary to perform the experiments described in <a href="https://icml.cc/virtual/2025/poster/45125">the above titled manuscript presented at ICML 2025</a>.</p>
+<h2 id="directories">Directories</h2>
+<pre><code>.
+├─ compile
+├─ experiment
+│  ├─ task
+│  └─ train
+├─ log
+│  ├─ block-co-fmnist
+│  ├─ cifar10
+│  └─ ...
+└─ plot
+</code></pre>
+<ul>
+<li>compile: custom CUDA kernels and C++ code for computationally efficient simulation of optical neural networks</li>
+<li>experiment: python code and shell scripts for the experiments</li>
+<li>experiment/task: python code for the models and datasets</li>
+<li>experiment/train: python code for the training methods</li>
+<li>log: to store execution log files in subdirectories, e.g., block-co-fmnist, cifar10.</li>
+<li>plot: python code for generating figures and tables</li>
+</ul>
+<h2 id="procedure">Procedure</h2>
+<p>One can reproduce the experimental results by the following procedure.</p>
+<ol>
+<li>Prepare a python environment, e.g., Miniconda, and install the following packages (the following command is an install command for Miniconda).<pre><code class="language-bash">conda create -n npzoo python=3.11
+conda activate npzoo
+pip install -r requirements.txt
+</code></pre>
+</li>
+<li>Install pytorch by the instructions in <a href="https://pytorch.org/get-started/previous-versions/">https://pytorch.org/get-started/previous-versions/</a> (the following command is an install command for pytorch 2.6.0 with an environment CUDA 11.8 installed).<pre><code class="language-bash">pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu118
+</code></pre>
+</li>
+<li>(Optional, for the Equalization and Copying memory tasks) Compile CUDA and C++ codes in <a href="./compile/">compile</a>:<pre><code class="language-bash"><span class="hljs-built_in">cd</span> compile; pip3 install --no-build-isolation --editable .
+</code></pre>
+The built package <code>mzi_onn_sim</code> is imported by the python files <a href="./experiment/task/chip.py">experiment/task/chip.py</a>.</li>
+<li>Run the proposed method (for the MNIST task, by the setting of <a href="./experiment/config.yaml">config.yaml</a>):<pre><code class="language-bash"><span class="hljs-built_in">cd</span> experiment; python main.py
+</code></pre>
+</li>
+<li>To reproduce all the experimental results, one needs to run all the shell scripts in the directory <code>experiment</code>. An example of running a shell script is:<pre><code class="language-bash"><span class="hljs-built_in">cd</span> experiment; bash mnist.sh
+</code></pre>
+This example shell script <a href="./experiment/mnist.sh">mnist.sh</a> assumes that the environment has 8 GPUs, <code>cuda_id</code> from 0 to 7, and takes advantage of parallel execution.
+When the environment does not have that amount of GPUs, please refer to <a href="#none-or-less-gpus">none or less GPUs</a>.</li>
+<li>To generate figures and tables, please go to the directory <code>plot</code>, and run the corresponding python script. An example is:<pre><code class="language-bash"><span class="hljs-built_in">cd</span> plot; python block-co-fmnist.py
+</code></pre>
+</li>
+</ol>
+<h3 id="files-in-experiment">Files in experiment</h3>
+<h4 id="python-code-for-section-32">Python code for Section 3.2</h4>
+<ul>
+<li><a href="./experiment/entropy_psd_fsd.py">entropy_psd_fsd.py</a>: Figure 3 (entropy_psd_fsd.pdf), the relations among the entropy, the expected PSD, and the expected FSD.</li>
+</ul>
+<h4 id="python-code-for-running-zo--zeroth-order-optimization-and-cma-es">Python code for running ZO- (Zeroth-Order optimization) and CMA-ES</h4>
+<ul>
+<li><a href="./experiment/main.py">main.py</a>: running ZO-I, ZO-co, ZO-NP</li>
+<li><a href="./experiment/main_cma.py">main_cma.py</a>: running CME-ES</li>
+</ul>
+<h4 id="python-code-related-to-the-proposed-method-in-experimenttrain-with-comments-such-as--line-xx-algorithm-2">Python code related to the proposed method in <code>experiment/train</code>, with comments such as <code># line xx, Algorithm 2</code></h4>
+<ul>
+<li><a href="./experiment/train/train_zo.py">train_zo.py</a>: ZO optimization</li>
+</ul>
+<h4 id="shell-script-for-experiments">Shell script for Experiments</h4>
+<ul>
+<li><a href="./experiment/mnist.sh">mnist.sh</a>: Table 1, Table 2, Figure 12 (MNIST, FashionMNIST)</li>
+<li><a href="./experiment/equalization.sh">equalization.sh</a>: Table 1, Table 2, Figure 12 (Equalization)</li>
+<li><a href="./experiment/copying.sh">copying.sh</a>: Table 1, Table 2, Figure 12 (Copying memory)</li>
+<li><a href="./experiment/cifar10.sh">cifar10.sh</a>: Table 1, Table 2, Figure 6 (CIFAR10)</li>
+<li><a href="./experiment/block-co-fmnist.sh">block-co-fmnist.sh</a>: Figure 7, Table 3, varying the block size for FashionMNIST</li>
+<li><a href="./experiment/variousQ-fmnist.sh">variousQ-fmnist.sh</a>: Table 4, varying the number Q of perturbation vectors for FashionMNIST</li>
+<li><a href="./experiment/lambdaF.sh">lambdaF.sh</a>: Figure 8 (left), varying the FSD hyperparameter</li>
+<li><a href="./experiment/Tud.sh">Tud.sh</a>: Figure 8 (right), varying the update frequency hyperparameter</li>
+<li><a href="./experiment/lr.sh">lr.sh</a>: Figure 10, varying the learning rate hyperparameter</li>
+<li><a href="./experiment/mnist816.sh">mnist816.sh</a>: Figure 11 (MNIST, FashionMNIST)</li>
+<li><a href="./experiment/equalization560.sh">equalization560.sh</a>: Figure 11 (Equalization)</li>
+<li><a href="./experiment/cma.sh">cma.sh</a>: Figure 11, performing CMA-ES</li>
+<li><a href="./experiment/cifar10large.sh">cifar10large.sh</a>: Table 6, Table 7 (CIFAR10 using the enlarged MLP-mixer with N = 1,706,762 parameters)</li>
+</ul>
+<h3 id="files-in-plot">Files in plot</h3>
+<ul>
+<li><a href="./plot/table1.py">table1.py</a>: Table 1, overall results</li>
+<li><a href="./plot/table2.py">table2.py</a>: Table 2, elapsed times and memory footprints</li>
+<li><a href="./plot/conv-time.py">conv-time.py</a>: Figure 6 <a href="./plot/cifar10-conv.pdf">cifar10-conv.pdf</a>, Figure 12 <a href="./plot/others-conv.pdf">others-conv.pdf</a>, convergence behavior</li>
+<li><a href="./plot/block-co-fmnist.py">block-co-fmnist.py</a>: Figure 7 <a href="./plot/block-co-fmnist.pdf">block-co-fmnist.pdf</a>, Table 3, FashionMNIST, block coordinate</li>
+<li><a href="./plot/variousQ-fmnist.py">variousQ-fmnist.py</a>: Table 4, varying the number Q of perturbation vectors for FashionMNIST</li>
+<li><a href="./plot/lambdaF_Tud.py">lambdaF_Tud.py</a>: Figure 8 <a href="./plot/lambdaF_Tud.pdf">lambdaF_Tud.pdf</a>, varying the FSD hyperparameter and the update frequency hyperparameter</li>
+<li><a href="./plot/lr.py">lr.py</a>: Figure 10 <a href="./plot/lr.pdf">lr.pdf</a>, varying the learning rate (lr)</li>
+<li><a href="./plot/cma.py">cma.py</a>: Figure 11 <a href="./plot/cma.pdf">cma.pdf</a>, results with CMA-ES in addition to ZO-I, ZO-co, ZO-NP</li>
+<li><a href="./plot/table6.py">table6.py</a>: Table 6</li>
+<li><a href="./plot/table7.py">table7.py</a>: Table 7</li>
+</ul>
+<h2 id="trouble-shooting">Trouble shooting</h2>
+<h3 id="none-or-less-gpus">none or less GPUs</h3>
+<p>If the environment does not have any GPU, i.e., without CUDA, please run a python program as</p>
+<pre><code class="language-bash">python main.py device=cpu
+</code></pre>
+<p>If the environment does not have 8 GPUs, please modify a shell script to accommodate the number of GPUs.
+For example, if there are 3 GPUs, <a href="./experiment/mnist.sh">mnist.sh</a> should be modified to</p>
+<pre><code class="language-bash">python main.py -m seed=1,2,3,4,5 lr=5e-4 dataset=MNIST,FMNIST suffix=<span class="hljs-string">&#x27;mnist/&#x27;</span> cuda_id=0 epochs=100 zoo.vectors=fromI &amp;
+python main.py -m seed=1,2,3,4,5 lr=5e-4 dataset=MNIST,FMNIST suffix=<span class="hljs-string">&#x27;mnist/&#x27;</span> cuda_id=1 epochs=100 zoo.vectors=coordinate &amp;
+python main.py -m seed=1,2,3,4,5 lr=5e-4 dataset=MNIST,FMNIST suffix=<span class="hljs-string">&#x27;mnist/&#x27;</span> cuda_id=2 epochs=100 zoo.vectors=np zoo.budget=1260000 &amp;
+</code></pre>
+<p>If a shell script is modified and therefore the mapping from <code>cuda_id</code> to the experimental condition changes, one should also modify the corresponding plot file in <a href="#files-in-plot">Files in plot</a>.</p>
+<h2 id="citation">Citation</h2>
+<pre><code>@inproceedings{sawada2025natural,
+  title = {Natural Perturbations for Black-box Training of Neural Networks by Zeroth-Order Optimization},
+  author = {Hiroshi Sawada and Kazuo Aoyama and Yuya Hikima},
+  booktitle = {Proceedings of the International Conference on Machine Learning (ICML)},
+  year = {2025}
+}
+</code></pre>
+<h2 id="license">License</h2>
+<p><a href="./SoftwareLicenseAgreement.pdf">SoftwareLicenseAgreement.pdf</a></p>
+
+            
+            
+        </body>
+        </html>
