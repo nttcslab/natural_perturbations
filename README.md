@@ -61,7 +61,7 @@ One can reproduce the experimental results by the following procedure.
 
 #### Python code for running ZO- (Zeroth-Order optimization) and CMA-ES
 - [main.py](./experiment/main.py): running ZO-I, ZO-co, ZO-NP
-- [main_cma.py](./experiment/main_cma.py): running CME-ES
+- [main_cma.py](./experiment/main_cma.py): running CMA-ES
 
 #### Python code related to the proposed method in `experiment/train`, with comments such as `# line xx, Algorithm 2`
 - [train_zo.py](./experiment/train/train_zo.py): ZO optimization
