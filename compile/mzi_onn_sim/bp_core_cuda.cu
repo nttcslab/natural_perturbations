@@ -1,4 +1,6 @@
-#include <torch/extension.h>
+#include <ATen/Operators.h>
+#include <torch/all.h>
+#include <torch/library.h>
 
 using namespace c10::complex_literals;
 using namespace c10_complex_math;
@@ -176,8 +178,8 @@ __global__ void backwardPSBS_kernel(
 			const float tmp_imag = (gradin[idx0]*tmp1conj + gradin[idx1]*tmp0conj).imag();
 			gradin[idx0] = conj(atten[idx0] * val_exp) * gtmp0;
 			gradin[idx1] = conj(atten[idx1]) * gtmp1;
-			grad_angle[param] = 2.0f * (conj(input_s[idx0])*gradin[idx0]).imag();
-			grad_split[param] = -sin_pi_4 * tmp_real + cos_pi_4 * tmp_imag;
+			grad_angle[param] = (conj(input_s[idx0])*gradin[idx0]).imag();
+			grad_split[param] = 0.5f * (-sin_pi_4 * tmp_real + cos_pi_4 * tmp_imag);
 			grad_atten[idx0] = gtmp0 * conj(input_s[idx0]*val_exp);
 			grad_atten[idx1] = gtmp1 * conj(input_s[idx1]);
 		}
@@ -293,7 +295,7 @@ __global__ void backwardPS_kernel(
 
 	const auto exp_miangle = exp(-1._if * angle_a[feature]);
 	grad_input_a[sample][feature] = exp_miangle * grad_output_a[sample][feature];
-	grad_angle_a[sample][feature] = 2.0 * (conj(input_a[sample][feature]) * grad_input_a[sample][feature]).imag();
+	grad_angle_a[sample][feature] = (conj(input_a[sample][feature]) * grad_input_a[sample][feature]).imag();
 }
 
 std::vector<at::Tensor>
@@ -353,12 +355,17 @@ __global__ void backwardmodReLU_kernel(
 	if (feature >= nFeatures || sample >= nSamples) return;
 
 	const auto incmplx = input_a[sample][feature];
-	const float inv_norm = 1.0f / (std::abs(incmplx) + modReLUeps);
-	const float scale = 1.0f + bias_a[feature] * inv_norm;				
+	const float r = std::abs(incmplx);
+	const float norm = r + modReLUeps;
+	const float inv_norm = 1.0f / norm;
+	const float scale = 1.0f + bias_a[feature] * inv_norm;
 	if (scale >= 0) {
 		const auto gout = grad_output_a[sample][feature];
-		grad_input_a[sample][feature] = scale * gout;
-		grad_bias_a[sample][feature] = 2.0f * inv_norm * (gout*conj(incmplx)).real();
+		const float bias_over_2normsq = bias_a[feature] / (2.0f * norm * norm);
+		const float A = scale - bias_over_2normsq * r;
+		const auto B = -bias_over_2normsq * (incmplx * incmplx) / (r + 1e-12f);
+		grad_input_a[sample][feature] = A * gout + B * conj(gout);
+		grad_bias_a[sample][feature] = inv_norm * (gout*conj(incmplx)).real();
 	} else {
 		grad_input_a[sample][feature] = 0.0;
 		grad_bias_a[sample][feature] = 0.0;

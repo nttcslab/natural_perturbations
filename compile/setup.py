@@ -1,4 +1,5 @@
 import os
+import sys
 import torch
 import glob
 from setuptools import find_packages, setup
@@ -30,6 +31,11 @@ def get_extensions():
             "-O3",
         ],
     }
+    if sys.platform == "win32":
+        # CUDA 13.x's CCCL headers require MSVC's standard-conforming preprocessor;
+        # the default "traditional" one fails with fatal error C1189. -Xcompiler
+        # forwards the flag from nvcc to the underlying cl.exe host compiler.
+        extra_compile_args["nvcc"] += ["-Xcompiler", "/Zc:preprocessor"]
     ext_modules = [
         extension(
             f"{library_name}._C",

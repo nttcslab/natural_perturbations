@@ -1,4 +1,6 @@
-#include <torch/extension.h>
+#include <ATen/Operators.h>
+#include <torch/all.h>
+#include <torch/library.h>
 
 using namespace c10::complex_literals;
 using namespace c10_complex_math;

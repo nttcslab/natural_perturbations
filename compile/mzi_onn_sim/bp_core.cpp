@@ -13,7 +13,7 @@ extern "C" {
      The import from Python will load the .so consisting of this file
      in this extension, so that the TORCH_LIBRARY static initializers
      below are run. */
-  PyObject* PyInit__C(void)
+  PyMODINIT_FUNC PyInit__C(void)
   {
       static struct PyModuleDef module_def = {
           PyModuleDef_HEAD_INIT,
@@ -185,8 +185,8 @@ backwardPSBS_cpu(const at::Tensor grad_output,
 					const float tmp_imag = (gradin[idx0]*tmp1conj + gradin[idx1]*tmp0conj).imag();
 					gradin[idx0] = conj(atten_l[idx0] * val_exp) * gtmp0;
 					gradin[idx1] = conj(atten_l[idx1]) * gtmp1;
-					grad_angle[param] = 2.0f * (conj(input_s[idx0]) * gradin[idx0]).imag();
-					grad_split_l[param] = -sin_pi_4 * tmp_real + cos_pi_4 * tmp_imag;
+					grad_angle[param] = (conj(input_s[idx0]) * gradin[idx0]).imag();
+					grad_split_l[param] = 0.5f * (-sin_pi_4 * tmp_real + cos_pi_4 * tmp_imag);
 					grad_atten_l[idx0] = gtmp0 * conj(input_s[idx0]*val_exp);
 					grad_atten_l[idx1] = gtmp1 * conj(input_s[idx1]);
 				}
@@ -263,7 +263,7 @@ backwardPS_cpu(const at::Tensor grad_output,
 		const auto exp_miangle_h = exp(-1._if * angle_a[feature]);
 		for (int64_t sample = 0; sample < nSamples; ++sample) {
 			grad_input_a[sample][feature] = exp_miangle_h * grad_output_a[sample][feature];
-			grad_angle_a[sample][feature] = 2.0 * (conj(input_a[sample][feature]) * grad_input_a[sample][feature]).imag();
+			grad_angle_a[sample][feature] = (conj(input_a[sample][feature]) * grad_input_a[sample][feature]).imag();
 		}
 	}
 	return {grad_input, grad_angle};
@@ -311,12 +311,17 @@ backwardmodReLU_cpu(const at::Tensor grad_output,
 		auto grad_bias_a_s = grad_bias_a[sample];
 		for (int feature = 0; feature < nFeatures; ++feature) {
 			const auto incmplx = input_a_s[feature];
-			const float inv_norm = 1.0f / (std::abs(incmplx) + modReLUeps);
-			const float scale = 1.0f + bias_a[feature] * inv_norm;				
+			const float r = std::abs(incmplx);
+			const float norm = r + modReLUeps;
+			const float inv_norm = 1.0f / norm;
+			const float scale = 1.0f + bias_a[feature] * inv_norm;
 			if (scale >= 0) {
 				const auto gout = grad_output_a_s[feature];
-				grad_input_a_s[feature] = scale * gout;
-				grad_bias_a_s[feature] = 2.0f * inv_norm * (gout*conj(incmplx)).real();
+				const float bias_over_2normsq = bias_a[feature] / (2.0f * norm * norm);
+				const float A = scale - bias_over_2normsq * r;
+				const auto B = -bias_over_2normsq * (incmplx * incmplx) / (r + 1e-12f);
+				grad_input_a_s[feature] = A * gout + B * conj(gout);
+				grad_bias_a_s[feature] = inv_norm * (gout*conj(incmplx)).real();
 			} else {
 				grad_input_a_s[feature] = 0.0;
 				grad_bias_a_s[feature] = 0.0;
